@@ -381,6 +381,27 @@
             @else
                 <span class="topbar-badge tb-proceso"><i class="ti ti-clock"></i> En proceso</span>
             @endif
+            
+            <div class="dropdown-container" style="position:relative;">
+                <button onclick="let d=document.getElementById('postulante-dropdown'); d.style.display = d.style.display==='none' ? 'block' : 'none';" style="background:none;border:none;cursor:pointer;padding:8px;color:#64748b;display:flex;align-items:center;justify-content:center;">
+                    <i class="ti ti-dots-vertical" style="font-size:22px;"></i>
+                </button>
+                <div id="postulante-dropdown" class="dropdown-menu" style="display:none; position:absolute; right:0; top:100%; background:#fff; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,0.1); width:200px; z-index:1000; overflow:hidden;">
+                    <div style="padding:12px 16px; border-bottom:1px solid #e2e8f0; background:#f8fafc;">
+                        <div style="font-size:13px; font-weight:600; color:#0f172a;">{{ $postulante->nombre }} {{ $postulante->apellido }}</div>
+                        <div style="font-size:11px; color:#64748b; margin-top:2px;">{{ $postulante->email ?? 'Postulante' }}</div>
+                    </div>
+                    <a href="{{ route('postulante.dashboard') }}" style="display:flex; align-items:center; gap:10px; padding:12px 16px; color:#475569; text-decoration:none; font-size:13px; transition:background 0.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='none'">
+                        <i class="ti ti-layout-dashboard" style="font-size:16px;"></i> Mi Panel
+                    </a>
+                    <form method="POST" action="{{ route('logout') }}" style="margin:0; border-top:1px solid #e2e8f0;">
+                        @csrf
+                        <button type="submit" style="width:100%; text-align:left; padding:12px 16px; background:none; border:none; cursor:pointer; color:#ef4444; font-size:13px; font-weight:500; display:flex; align-items:center; gap:10px; transition:background 0.2s;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='none'">
+                            <i class="ti ti-logout" style="font-size:16px;"></i> Cerrar Sesión
+                        </button>
+                    </form>
+                </div>
+            </div>
         </div>
     </header>
 

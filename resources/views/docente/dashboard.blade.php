@@ -394,10 +394,25 @@
             <i class="ti ti-calendar"></i>
             {{ now()->locale('es')->isoFormat('dddd, D [de] MMMM YYYY') }}
         </span>
-        <span style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:5px">
-            <i class="ti ti-user-circle"></i>
-            {{ Auth::user()->nombre }} {{ Auth::user()->apellido }}
-        </span>
+        <div class="dropdown-container" style="position:relative;">
+            <button onclick="let d=document.getElementById('docente-dropdown'); d.style.display = d.style.display==='none' ? 'block' : 'none';" style="background:none;border:none;cursor:pointer;padding:8px;color:var(--text);display:flex;align-items:center;gap:5px;font-size:12px;">
+                <i class="ti ti-user-circle" style="font-size:16px;"></i>
+                <span class="d-none-mobile">{{ Auth::user()->nombre }} {{ Auth::user()->apellido }}</span>
+                <i class="ti ti-dots-vertical" style="font-size:18px; margin-left:4px;"></i>
+            </button>
+            <div id="docente-dropdown" class="dropdown-menu" style="display:none; position:absolute; right:0; top:100%; background:var(--surface); border:1px solid var(--border); border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,0.5); width:200px; z-index:1000; overflow:hidden;">
+                <div style="padding:12px 16px; border-bottom:1px solid var(--border); background:var(--surface2);">
+                    <div style="font-size:13px; font-weight:600; color:var(--text);">{{ Auth::user()->nombre }} {{ Auth::user()->apellido }}</div>
+                    <div style="font-size:11px; color:var(--muted); margin-top:2px;">{{ Auth::user()->email ?? 'Docente' }}</div>
+                </div>
+                <form method="POST" action="{{ route('logout') }}" style="margin:0;">
+                    @csrf
+                    <button type="submit" style="width:100%; text-align:left; padding:12px 16px; background:none; border:none; cursor:pointer; color:#ef4444; font-size:13px; font-weight:500; display:flex; align-items:center; gap:10px; transition:background 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.1)'" onmouseout="this.style.background='none'">
+                        <i class="ti ti-logout" style="font-size:16px;"></i> Cerrar Sesión
+                    </button>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 
