@@ -150,102 +150,113 @@ class ExamenController extends Controller
     // ────────────────────────────────────────────
     // IMPORTAR — CSV con resultados
     // ────────────────────────────────────────────
-    public function importar(Request $request)
-    {
-        $request->validate([
-            'examen_id' => 'required|exists:examen,id',
-            'archivo'   => 'required|file|mimes:csv,txt|max:5120',
-        ], [
-            'examen_id.required' => 'Selecciona el examen destino.',
-            'archivo.required'   => 'Adjunta un archivo CSV.',
-            'archivo.mimes'      => 'El archivo debe ser .csv',
-        ]);
+   public function importar(Request $request)
+{
+    set_time_limit(0);
+    ini_set('max_execution_time', 0);
 
-        $examen    = DB::table('examen')->find($request->examen_id);
-        $adminId   = auth()->id();
-        $archivo   = $request->file('archivo');
-        $exitosos  = 0;
-        $fallidos  = 0;
-        $errores   = [];
+    $request->validate([
+        'examen_id' => 'required|exists:examen,id',
+        'archivo'   => 'required|file|mimes:csv,txt|max:5120',
+    ], [
+        'examen_id.required' => 'Selecciona el examen destino.',
+        'archivo.required'   => 'Adjunta un archivo CSV.',
+        'archivo.mimes'      => 'El archivo debe ser .csv',
+    ]);
 
-        if (($handle = fopen($archivo->getRealPath(), 'r')) !== false) {
-            // Detect delimiter: inspect first line
-            $firstLine = fgets($handle);
-            $delimiter = ',';
-            $semicolons = substr_count($firstLine, ';');
-            $commas = substr_count($firstLine, ',');
-            $tabs = substr_count($firstLine, "\t");
-            
-            if ($semicolons > $commas && $semicolons > $tabs) {
-                $delimiter = ';';
-            } elseif ($tabs > $commas && $tabs > $semicolons) {
-                $delimiter = "\t";
+    $adminId  = auth()->id();
+    $archivo  = $request->file('archivo');
+    $exitosos = 0;
+    $fallidos = 0;
+    $errores  = [];
+
+    // Cargar TODOS los postulantes de una sola vez
+    $postulantes = DB::table('postulante')
+        ->select('id', 'codigo_estudiante', 'ci')
+        ->get()
+        ->keyBy('codigo_estudiante');
+
+    $porCi = DB::table('postulante')
+        ->select('id', 'codigo_estudiante', 'ci')
+        ->get()
+        ->keyBy('ci');
+
+    if (($handle = fopen($archivo->getRealPath(), 'r')) !== false) {
+        $firstLine  = fgets($handle);
+        $delimiter  = ',';
+        $semicolons = substr_count($firstLine, ';');
+        $commas     = substr_count($firstLine, ',');
+        $tabs       = substr_count($firstLine, "\t");
+
+        if ($semicolons > $commas && $semicolons > $tabs) $delimiter = ';';
+        elseif ($tabs > $commas && $tabs > $semicolons)   $delimiter = "\t";
+
+        rewind($handle);
+
+        $insertar   = [];
+        $ahora      = now();
+        $fila       = 0;
+
+        while (($row = fgetcsv($handle, 1000, $delimiter)) !== false) {
+            $fila++;
+            if ($fila === 1) continue;
+
+            $codigo  = trim($row[0] ?? '');
+            if (str_starts_with($codigo, "\xef\xbb\xbf")) $codigo = substr($codigo, 3);
+            $codigo  = trim($codigo);
+            $puntaje = trim($row[1] ?? '');
+
+            if ($codigo === '' && $puntaje === '') continue;
+
+            if ($codigo === '' || !is_numeric($puntaje)) {
+                $fallidos++;
+                $errores[] = "Fila $fila: datos inválidos.";
+                continue;
             }
-            
-            rewind($handle);
 
-            $fila = 0;
-            while (($row = fgetcsv($handle, 1000, $delimiter)) !== false) {
-                $fila++;
-                if ($fila === 1) continue; // saltar cabecera
+            $postulante = $postulantes[$codigo] ?? $porCi[$codigo] ?? null;
 
-                $codigo  = trim($row[0] ?? '');
-                
-                // Clean UTF-8 BOM if present
-                if (str_starts_with($codigo, "\xef\xbb\xbf")) {
-                    $codigo = substr($codigo, 3);
-                }
-                $codigo = trim($codigo);
-                
-                $puntaje = trim($row[1] ?? '');
+            if (!$postulante) {
+                $fallidos++;
+                $errores[] = "Fila $fila: código '$codigo' no encontrado.";
+                continue;
+            }
 
-                if ($codigo === '' && $puntaje === '') {
-                    // Skip empty rows silently
-                    continue;
-                }
+            $insertar[] = [
+                'postulante_id'  => $postulante->id,
+                'examen_id'      => $request->examen_id,
+                'puntaje'        => min(100, max(0, (float)$puntaje)),
+                'registrado_por' => $adminId,
+                'registrado_en'  => $ahora,
+                'actualizado_en' => $ahora,
+            ];
+            $exitosos++;
+        }
+        fclose($handle);
 
-                if ($codigo === '' || !is_numeric($puntaje)) {
-                    $fallidos++;
-                    $errores[] = "Fila $fila: datos inválidos (código vacío o puntaje no numérico).";
-                    continue;
-                }
-
-                $postulante = DB::table('postulante')
-                    ->where('codigo_estudiante', $codigo)
-                    ->orWhere('ci', $codigo)
-                    ->first();
-                if (!$postulante) {
-                    $fallidos++;
-                    $errores[] = "Fila $fila: código/CI '$codigo' no encontrado.";
-                    continue;
-                }
-
-                $score = min(100, max(0, (float)$puntaje));
-                DB::table('nota')->updateOrInsert(
-                    ['postulante_id' => $postulante->id, 'examen_id' => $request->examen_id],
-                    [
-                        'puntaje'        => $score,
-                        'registrado_por' => $adminId,
-                        'registrado_en'  => now(),
-                        'actualizado_en' => now(),
-                    ]
+        // Un solo INSERT para todos los registros
+        if (!empty($insertar)) {
+            foreach (array_chunk($insertar, 50) as $chunk) {
+                DB::table('nota')->upsert(
+                    $chunk,
+                    ['postulante_id', 'examen_id'],
+                    ['puntaje', 'registrado_por', 'actualizado_en']
                 );
-                $exitosos++;
-            }
-            fclose($handle);
-        }
-
-        $msg = "Importación completada: $exitosos registros exitosos";
-        if ($fallidos > 0) {
-            $msg .= ", $fallidos fallidos.";
-            if (!empty($errores)) {
-                $msg .= " Detalle de primeros errores: " . implode(' | ', array_slice($errores, 0, 3));
             }
         }
-
-        return redirect()->route('admin.examenes.index')
-                         ->with($fallidos > 0 ? 'error' : 'success', $msg);
     }
+
+    $msg = "Importación completada: $exitosos registros exitosos";
+    if ($fallidos > 0) {
+        $msg .= ", $fallidos fallidos.";
+        if (!empty($errores)) {
+            $msg .= " Errores: " . implode(' | ', array_slice($errores, 0, 3));
+        }
+    }
+
+    return redirect()->route('admin.examenes.index')
+                     ->with($fallidos > 0 ? 'error' : 'success', $msg);
+}
 
     // ────────────────────────────────────────────
     // REPORTE — Genera CSV general de exámenes
@@ -366,4 +377,4 @@ class ExamenController extends Controller
         return redirect()->route('admin.examenes.index')
                          ->with('success', '✓ Examen eliminado correctamente.');
     }
-}
+}
