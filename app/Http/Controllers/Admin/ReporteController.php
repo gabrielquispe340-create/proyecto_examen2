@@ -287,7 +287,7 @@ private function generarExcel(array $datos, string $nombre): \Illuminate\Http\Re
     ]);
 }
 
-    private function generarPDF(array $datos, string $nombre, string $tipo): \Illuminate\Http\Response
+    private function generarPDF(array $datos, string $nombre, string $tipo)
     {
         $titulo = $this->titulos()[$tipo] ?? $nombre;
         $convocatoria = 'Todas las convocatorias';
@@ -322,11 +322,7 @@ private function generarExcel(array $datos, string $nombre): \Illuminate\Http\Re
         $html .= '<div class="footer">Total: '.count($datos['rows']).' registros</div>';
         $html .= '</body></html>';
 
-        return response($html, 200, [
-            'Content-Type'        => 'application/pdf',
-            'Content-Disposition' => "attachment; filename=\"{$nombre}.pdf\"",
-            'X-Content-Type-Options' => 'nosniff',
-        ]);
+        return \Barryvdh\DomPDF\Facade\Pdf::loadHTML($html)->download("{$nombre}.pdf");
     }
 
     private function nombreArchivo(string $tipo): string

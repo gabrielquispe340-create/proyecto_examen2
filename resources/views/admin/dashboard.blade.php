@@ -63,6 +63,18 @@
         }
         .btn-logout:hover { background: rgba(255,255,255,0.22); }
 
+        /* ── HAMBURGER ── */
+        .btn-hamburger {
+            display: none;
+            background: none; border: none;
+            color: #fff; cursor: pointer;
+            padding: 6px; border-radius: 6px;
+            align-items: center; justify-content: center;
+            transition: background .2s;
+        }
+        .btn-hamburger:hover { background: rgba(255,255,255,0.12); }
+        .btn-hamburger i { font-size: 22px; }
+
         /* ── SIDEBAR ── */
         .sidebar {
             width: 224px;
@@ -75,7 +87,20 @@
             display: flex;
             flex-direction: column;
             gap: 2px;
+            transition: transform .3s ease;
+            z-index: 150;
         }
+
+        /* ── SIDEBAR OVERLAY ── */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.55);
+            z-index: 140;
+            backdrop-filter: blur(2px);
+        }
+        .sidebar-overlay.active { display: block; }
 
         .nav-label {
             font-size: 10px; font-weight: 700;
@@ -164,6 +189,9 @@
         /* ── GRID 2 COLS ── */
         .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
 
+        /* ── TABLE RESPONSIVE ── */
+        .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
         /* ── CARD ── */
         .card {
             background: var(--surface); border-radius: 12px;
@@ -232,9 +260,92 @@
 
         /* ── VACÍO ── */
         .empty { text-align: center; padding: 32px; color: var(--muted); font-size: 13px; }
+
+        /* ══════════════════════════════════════
+           RESPONSIVE — TABLET (≤ 1024px)
+        ══════════════════════════════════════ */
+        @media (max-width: 1024px) {
+            .btn-hamburger { display: flex; }
+            .topbar-user   { display: none; }
+
+            .sidebar {
+                transform: translateX(-100%);
+                width: 260px;
+                top: 0;
+                height: 100vh;
+                z-index: 160;
+            }
+            .sidebar.open { transform: translateX(0); }
+
+            .layout {
+                margin-left: 0;
+                padding: 16px;
+            }
+
+            .metrics {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .two-col {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ══════════════════════════════════════
+           RESPONSIVE — MÓVIL (≤ 640px)
+        ══════════════════════════════════════ */
+        @media (max-width: 640px) {
+            .topbar { padding: 0 12px; }
+            .topbar-brand span { display: none; }
+
+            .layout { padding: 12px; }
+
+            .metrics {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+            .metric { padding: 14px; }
+            .metric-value { font-size: 22px; }
+
+            .two-col { grid-template-columns: 1fr; }
+
+            .acciones { grid-template-columns: 1fr; }
+
+            .card { padding: 14px; }
+            .card-title { font-size: 12px; margin-bottom: 12px; }
+
+            table { font-size: 11px; }
+            th, td { padding: 7px 6px; }
+        }
+    
+                /* =========================================================
+           RESPONSIVE FIXES INJECTED BY AUTOMATION SCRIPT
+           ========================================================= */
+        .table-responsive { overflow-x: auto; width: 100%; -webkit-overflow-scrolling: touch; margin-bottom: 1rem; }
+        .btn-menu-mobile { display: none; background: transparent; border: none; color: #fff; font-size: 24px; cursor: pointer; padding: 0 10px; }
+        .overlay-mobile { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 250; }
+        .overlay-mobile.show { display: block; }
+        @media (max-width: 1024px) {
+            .sidebar { transform: translateX(-100%); z-index: 300; transition: transform 0.3s ease; height: 100vh; top: 0; padding-top: 56px; }
+            .sidebar.open { transform: translateX(0); }
+            .main, .layout, .main-content { margin-left: 0 !important; width: 100% !important; padding-left: 0 !important; padding-right: 0 !important; }
+            .topbar-brand { display: none; }
+            .btn-menu-mobile { display: block; }
+            .conteos { grid-template-columns: 1fr 1fr !important; }
+            .filtros { flex-direction: column; align-items: stretch !important; }
+            .filtros > div { width: 100%; }
+            .filtros input, .filtros select { width: 100% !important; }
+            .page { padding: 16px !important; }
+            .topbar-user { display: none; }
+        }
+        @media (max-width: 480px) {
+            .conteos { grid-template-columns: 1fr !important; }
+        }
     </style>
 </head>
 <body>
+<!-- Mobile Overlay -->
+<div id="sidebar-overlay-mobile" class="overlay-mobile" onclick="document.querySelector('.sidebar').classList.remove('open'); this.classList.remove('show');"></div>
 <script>
     // Fuerza recarga si el navegador restaura la página desde bfcache
     window.addEventListener('pageshow', function(event) {
@@ -243,11 +354,20 @@
         }
     });
 </script>
+{{-- SIDEBAR OVERLAY (fondo oscuro móvil) --}}
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
 {{-- TOPBAR --}}
 <div class="topbar">
-    <div class="topbar-brand">
-        <i class="ti ti-school" style="font-size:20px"></i>
-        CUP — FICCT
+    <button type="button" class="btn-menu-mobile" onclick="document.querySelector('.sidebar').classList.toggle('open'); document.getElementById('sidebar-overlay-mobile').classList.toggle('show');">&#9776;</button>
+    <div style="display:flex;align-items:center;gap:12px">
+        <button class="btn-hamburger" id="btn-hamburger" onclick="toggleSidebar()" aria-label="Abrir menú">
+            <i class="ti ti-menu-2" id="hamburger-icon"></i>
+        </button>
+        <div class="topbar-brand">
+            <i class="ti ti-school" style="font-size:20px"></i>
+            <span>CUP — FICCT</span>
+        </div>
     </div>
     <div class="topbar-right">
         <!-- Theme Toggle Button -->
@@ -261,7 +381,7 @@
         <form method="POST" action="{{ route('logout') }}" style="display:inline">
             @csrf
             <button type="submit" class="btn-logout">
-                <i class="ti ti-logout"></i> Salir
+                <i class="ti ti-logout"></i> <span class="hide-xs">Salir</span>
             </button>
         </form>
     </div>
@@ -313,7 +433,8 @@
                     No hay pre-registros pendientes
                 </div>
             @else
-                <table>
+                <div class="table-wrap">
+                <div class="table-responsive"><table>
                     <thead>
                         <tr>
                             <th>Nombre</th>
@@ -342,7 +463,8 @@
                         </tr>
                         @endforeach
                     </tbody>
-                </table>
+                </table></div>
+                </div>
             @endif
         </div>
 
@@ -390,7 +512,8 @@
                 No hay actividad registrada aún
             </div>
         @else
-            <table>
+            <div class="table-wrap">
+            <div class="table-responsive"><table>
                 <thead>
                     <tr>
                         <th>#</th>
@@ -429,7 +552,8 @@
                     </tr>
                     @endforeach
                 </tbody>
-            </table>
+            </table></div>
+            </div>
         @endif
     </div>
 
@@ -459,6 +583,36 @@
             localStorage.setItem('theme', 'light');
         }
         updateThemeIcon();
+    });
+
+    // ── SIDEBAR MÓVIL ──
+    function toggleSidebar() {
+        const sidebar  = document.querySelector('.sidebar');
+        const overlay  = document.getElementById('sidebar-overlay');
+        const icon     = document.getElementById('hamburger-icon');
+        const isOpen   = sidebar.classList.contains('open');
+        if (isOpen) {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('active');
+            icon.className = 'ti ti-menu-2';
+        } else {
+            sidebar.classList.add('open');
+            overlay.classList.add('active');
+            icon.className = 'ti ti-x';
+        }
+    }
+
+    function closeSidebar() {
+        document.querySelector('.sidebar').classList.remove('open');
+        document.getElementById('sidebar-overlay').classList.remove('active');
+        document.getElementById('hamburger-icon').className = 'ti ti-menu-2';
+    }
+
+    // Cerrar sidebar al hacer clic en un nav-item (móvil)
+    document.querySelectorAll('.nav-item').forEach(function(item) {
+        item.addEventListener('click', function() {
+            if (window.innerWidth <= 1024) closeSidebar();
+        });
     });
 </script>
 </body>

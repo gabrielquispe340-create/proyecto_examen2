@@ -1,4 +1,4 @@
-<aside class="w-56 bg-[#1a3353] flex flex-col flex-shrink-0 min-h-screen">
+<aside id="app-sidebar" class="fixed inset-y-0 left-0 z-50 w-56 bg-[#1a3353] flex flex-col flex-shrink-0 transition-transform duration-300 transform -translate-x-full lg:relative lg:translate-x-0">
     <div class="h-14 flex items-center px-5 border-b border-white/10">
         <a href="{{ route('dashboard') }}" class="flex items-center gap-2 text-white font-bold text-base tracking-wide">
             <svg class="w-5 h-5 text-blue-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">

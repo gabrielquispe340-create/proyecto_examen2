@@ -204,12 +204,123 @@
         .b-fail { background: #fee2e2; color: #991b1b; }
         .b-pend { background: #f1f5f9; color: #64748b; }
         .b-blue { background: #dbeafe; color: #1e40af; }
+
+        /* ── HAMBURGER ── */
+        .btn-hamburger {
+            display: none;
+            background: none; border: none;
+            color: #0f172a; cursor: pointer;
+            padding: 6px; border-radius: 6px;
+            align-items: center; justify-content: center;
+            transition: background .2s;
+        }
+        .btn-hamburger:hover { background: rgba(0,0,0,0.06); }
+        .btn-hamburger i { font-size: 22px; }
+
+        /* ── SIDEBAR OVERLAY ── */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.55);
+            z-index: 90;
+            backdrop-filter: blur(2px);
+        }
+        .sidebar-overlay.active { display: block; }
+
+        /* ══════════════════════════════════════
+           RESPONSIVE — TABLET (≤ 1024px)
+        ══════════════════════════════════════ */
+        @media (max-width: 1024px) {
+            .btn-hamburger { display: flex; }
+
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform .3s ease;
+                z-index: 100;
+            }
+            .sidebar.open { transform: translateX(0); }
+
+            .main { margin-left: 0; }
+
+            .content { padding: 20px 16px; }
+
+            .metrics { grid-template-columns: repeat(2, 1fr); }
+
+            .grid-2 { grid-template-columns: 1fr; }
+            .grid-3 { grid-template-columns: 1fr 1fr; }
+
+            .hero { flex-direction: column; gap: 16px; padding: 20px; }
+            .hero-right { align-self: flex-start; }
+        }
+
+        /* ══════════════════════════════════════
+           RESPONSIVE — MÓVIL (≤ 640px)
+        ══════════════════════════════════════ */
+        @media (max-width: 640px) {
+            .topbar { padding: 0 12px; }
+            .topbar-left h1 { font-size: 14px; }
+            .topbar-left p  { display: none; }
+            .topbar-badge span { display: none; }
+
+            .content { padding: 12px; }
+
+            .metrics {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+            .metric-card { padding: 14px; }
+            .metric-info .val { font-size: 20px; }
+
+            .grid-2 { grid-template-columns: 1fr; }
+            .grid-3 { grid-template-columns: 1fr; }
+
+            .hero { padding: 16px; }
+            .hero-icon { width: 48px; height: 48px; font-size: 22px; }
+            .hero-text h2 { font-size: 16px; }
+            .hero-text p  { font-size: 12px; }
+            .hero-left { gap: 12px; }
+
+            .info-grid { grid-template-columns: 1fr; }
+
+            .card { padding: 14px; }
+            .card-title { font-size: 13px; }
+        }
+    
+                /* =========================================================
+           RESPONSIVE FIXES INJECTED BY AUTOMATION SCRIPT
+           ========================================================= */
+        .table-responsive { overflow-x: auto; width: 100%; -webkit-overflow-scrolling: touch; margin-bottom: 1rem; }
+        .btn-menu-mobile { display: none; background: transparent; border: none; color: #fff; font-size: 24px; cursor: pointer; padding: 0 10px; }
+        .overlay-mobile { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 250; }
+        .overlay-mobile.show { display: block; }
+        @media (max-width: 1024px) {
+            .sidebar { transform: translateX(-100%); z-index: 300; transition: transform 0.3s ease; height: 100vh; top: 0; padding-top: 56px; }
+            .sidebar.open { transform: translateX(0); }
+            .main, .layout, .main-content { margin-left: 0 !important; width: 100% !important; padding-left: 0 !important; padding-right: 0 !important; }
+            .topbar-brand { display: none; }
+            .btn-menu-mobile { display: block; }
+            .conteos { grid-template-columns: 1fr 1fr !important; }
+            .filtros { flex-direction: column; align-items: stretch !important; }
+            .filtros > div { width: 100%; }
+            .filtros input, .filtros select { width: 100% !important; }
+            .page { padding: 16px !important; }
+            .topbar-user { display: none; }
+        }
+        @media (max-width: 480px) {
+            .conteos { grid-template-columns: 1fr !important; }
+        }
     </style>
 </head>
 <body>
+<!-- Mobile Overlay -->
+<div id="sidebar-overlay-mobile" class="overlay-mobile" onclick="document.querySelector('.sidebar').classList.remove('open'); this.classList.remove('show');"></div>
+
+{{-- SIDEBAR OVERLAY (fondo oscuro móvil) --}}
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
 
 {{-- SIDEBAR --}}
-<aside class="sidebar">
+<aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
         <i class="ti ti-school"></i> CUP — FICCT
     </div>
@@ -247,9 +358,15 @@
 <div class="main">
     {{-- TOPBAR --}}
     <header class="topbar">
-        <div class="topbar-left">
-            <h1>Hola, {{ $postulante->nombre }} 👋</h1>
-            <p>Bienvenido a tu panel de admisiones — CUP FICCT</p>
+        <div style="display:flex;align-items:center;gap:10px">
+            <button class="btn-hamburger" id="btn-hamburger" onclick="toggleSidebar()" aria-label="Abrir menú">
+                <i class="ti ti-menu-2" id="hamburger-icon"></i>
+            </button>
+            <div class="topbar-left">
+    <button type="button" class="btn-menu-mobile" onclick="document.querySelector('.sidebar').classList.toggle('open'); document.getElementById('sidebar-overlay-mobile').classList.toggle('show');">&#9776;</button>
+                <h1>Hola, {{ $postulante->nombre }} 👋</h1>
+                <p>Bienvenido a tu panel de admisiones — CUP FICCT</p>
+            </div>
         </div>
         <div class="topbar-right">
             @php
@@ -507,6 +624,39 @@
 <script>
     window.addEventListener('pageshow', function(e) {
         if (e.persisted) window.location.reload();
+    });
+
+    // ── SIDEBAR MÓVIL ──
+    function toggleSidebar() {
+        const sidebar  = document.getElementById('sidebar');
+        const overlay  = document.getElementById('sidebar-overlay');
+        const icon     = document.getElementById('hamburger-icon');
+        const isOpen   = sidebar.classList.contains('open');
+        if (isOpen) {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('active');
+            icon.className = 'ti ti-menu-2';
+        } else {
+            sidebar.classList.add('open');
+            overlay.classList.add('active');
+            icon.className = 'ti ti-x';
+        }
+    }
+
+    function closeSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        const icon    = document.getElementById('hamburger-icon');
+        sidebar.classList.remove('open');
+        overlay.classList.remove('active');
+        icon.className = 'ti ti-menu-2';
+    }
+
+    // Cerrar sidebar al hacer clic en nav-item (móvil)
+    document.querySelectorAll('.nav-item').forEach(function(item) {
+        item.addEventListener('click', function() {
+            if (window.innerWidth <= 1024) closeSidebar();
+        });
     });
 </script>
 </body>

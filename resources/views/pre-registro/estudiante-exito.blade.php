@@ -18,9 +18,35 @@
         .ci-badge strong { font-size: 18px; color: #1e3a6e; display: block; margin-top: 4px; }
         .btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 24px; border-radius: 10px; font-size: 13px; font-weight: 600; background: #1e3a6e; color: #fff; text-decoration: none; margin-top: 24px; }
         .btn:hover { background: #162d58; }
+    
+                /* =========================================================
+           RESPONSIVE FIXES INJECTED BY AUTOMATION SCRIPT
+           ========================================================= */
+        .table-responsive { overflow-x: auto; width: 100%; -webkit-overflow-scrolling: touch; margin-bottom: 1rem; }
+        .btn-menu-mobile { display: none; background: transparent; border: none; color: #fff; font-size: 24px; cursor: pointer; padding: 0 10px; }
+        .overlay-mobile { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 250; }
+        .overlay-mobile.show { display: block; }
+        @media (max-width: 1024px) {
+            .sidebar { transform: translateX(-100%); z-index: 300; transition: transform 0.3s ease; height: 100vh; top: 0; padding-top: 56px; }
+            .sidebar.open { transform: translateX(0); }
+            .main, .layout, .main-content { margin-left: 0 !important; width: 100% !important; padding-left: 0 !important; padding-right: 0 !important; }
+            .topbar-brand { display: none; }
+            .btn-menu-mobile { display: block; }
+            .conteos { grid-template-columns: 1fr 1fr !important; }
+            .filtros { flex-direction: column; align-items: stretch !important; }
+            .filtros > div { width: 100%; }
+            .filtros input, .filtros select { width: 100% !important; }
+            .page { padding: 16px !important; }
+            .topbar-user { display: none; }
+        }
+        @media (max-width: 480px) {
+            .conteos { grid-template-columns: 1fr !important; }
+        }
     </style>
 </head>
 <body>
+<!-- Mobile Overlay -->
+<div id="sidebar-overlay-mobile" class="overlay-mobile" onclick="document.querySelector('.sidebar').classList.remove('open'); this.classList.remove('show');"></div>
     <div class="card">
         <div class="icon-wrap"><i class="ti ti-circle-check"></i></div>
         <h1>¡Pre-registro enviado!</h1>

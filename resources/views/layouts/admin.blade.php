@@ -13,14 +13,19 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="font-sans antialiased bg-gray-100">
+<!-- Mobile Overlay -->
+<div id="sidebar-overlay-mobile" class="overlay-mobile" onclick="document.querySelector('.sidebar').classList.remove('open'); this.classList.remove('show');"></div>
 
 <div class="flex h-screen overflow-hidden">
 
     {{-- ══════════════════════════════════════
          SIDEBAR
     ══════════════════════════════════════ --}}
+    <!-- Overlay -->
+    <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden"></div>
+
     <aside id="sidebar"
-           class="w-56 bg-[#1a3353] flex flex-col flex-shrink-0 transition-all duration-300">
+           class="fixed inset-y-0 left-0 z-50 w-56 bg-[#1a3353] flex flex-col flex-shrink-0 transition-transform duration-300 transform -translate-x-full lg:relative lg:translate-x-0">
 
         {{-- Logo --}}
         <div class="h-14 flex items-center px-5 border-b border-white/10">
@@ -193,7 +198,7 @@
         <header class="h-14 bg-[#1a3353] flex items-center justify-between px-6 flex-shrink-0">
 
             {{-- Botón hamburguesa (mobile) --}}
-            <button onclick="document.getElementById('sidebar').classList.toggle('-translate-x-full')"
+            <button onclick="toggleSidebar()"
                     class="text-white/70 hover:text-white lg:hidden">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
@@ -266,6 +271,13 @@
 </div>
 
 <script>
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        if (sidebar) sidebar.classList.toggle('-translate-x-full');
+        if (overlay) overlay.classList.toggle('hidden');
+    }
+
     window.addEventListener('pageshow', function (event) {
         if (event.persisted) {
             window.location.reload();

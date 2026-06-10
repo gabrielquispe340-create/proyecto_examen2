@@ -249,15 +249,42 @@
         /* ── CONFLICT WARNING ── */
         .conflict-hint { padding: 10px 14px; border-radius: 8px; background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.3); color: #fcd34d; font-size: 12px; line-height: 1.5; display: none; }
         .light-theme .conflict-hint { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
+    
+                /* =========================================================
+           RESPONSIVE FIXES INJECTED BY AUTOMATION SCRIPT
+           ========================================================= */
+        .table-responsive { overflow-x: auto; width: 100%; -webkit-overflow-scrolling: touch; margin-bottom: 1rem; }
+        .btn-menu-mobile { display: none; background: transparent; border: none; color: #fff; font-size: 24px; cursor: pointer; padding: 0 10px; }
+        .overlay-mobile { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 250; }
+        .overlay-mobile.show { display: block; }
+        @media (max-width: 1024px) {
+            .sidebar { transform: translateX(-100%); z-index: 300; transition: transform 0.3s ease; height: 100vh; top: 0; padding-top: 56px; }
+            .sidebar.open { transform: translateX(0); }
+            .main, .layout, .main-content { margin-left: 0 !important; width: 100% !important; padding-left: 0 !important; padding-right: 0 !important; }
+            .topbar-brand { display: none; }
+            .btn-menu-mobile { display: block; }
+            .conteos { grid-template-columns: 1fr 1fr !important; }
+            .filtros { flex-direction: column; align-items: stretch !important; }
+            .filtros > div { width: 100%; }
+            .filtros input, .filtros select { width: 100% !important; }
+            .page { padding: 16px !important; }
+            .topbar-user { display: none; }
+        }
+        @media (max-width: 480px) {
+            .conteos { grid-template-columns: 1fr !important; }
+        }
     </style>
 </head>
 <body>
+<!-- Mobile Overlay -->
+<div id="sidebar-overlay-mobile" class="overlay-mobile" onclick="document.querySelector('.sidebar').classList.remove('open'); this.classList.remove('show');"></div>
 <script>
     window.addEventListener('pageshow', function(e) { if (e.persisted) window.location.reload(); });
 </script>
 
 {{-- ── TOPBAR ── --}}
 <div class="topbar">
+    <button type="button" class="btn-menu-mobile" onclick="document.querySelector('.sidebar').classList.toggle('open'); document.getElementById('sidebar-overlay-mobile').classList.toggle('show');">&#9776;</button>
     <a href="{{ route('admin.dashboard') }}" class="topbar-brand">
         <i class="ti ti-school" style="font-size:20px"></i> CUP — FICCT
     </a>
@@ -355,7 +382,7 @@
                     <span class="dia-count">{{ $horariosDia->count() }} clase{{ $horariosDia->count() !== 1 ? 's' : '' }}</span>
                 </div>
                 <div class="card">
-                    <table>
+                    <div class="table-responsive"><table>
                         <thead>
                             <tr>
                                 <th>Hora</th>
@@ -411,7 +438,7 @@
                             </tr>
                             @endforeach
                         </tbody>
-                    </table>
+                    </table></div>
                 </div>
             </div>
             @endif

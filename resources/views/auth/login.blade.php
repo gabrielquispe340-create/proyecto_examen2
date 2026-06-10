@@ -228,13 +228,46 @@
             line-height: 1.6;
         }
 
+        /* Mobile pre-registro */
+        .mobile-pre-registro { display: none; margin-top: 24px; padding-top: 24px; border-top: 1px solid #e2e8f0; }
+        .divider-mobile { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: .08em; text-align: center; margin-bottom: 16px; font-weight: 600; }
+        .btn-outline-mobile { display: block; width: 100%; padding: 11px 20px; border: 1px solid #cbd5e1; border-radius: 10px; color: #334155; font-size: 13px; font-weight: 500; text-decoration: none; text-align: center; margin-bottom: 10px; background: #fff; transition: background .2s; }
+        .btn-outline-mobile:hover { background: #f8fafc; border-color: #94a3b8; }
+
         /* responsive */
         @media (max-width: 768px) {
             .left { display: none; }
+            .mobile-pre-registro { display: block; }
+        }
+    
+                /* =========================================================
+           RESPONSIVE FIXES INJECTED BY AUTOMATION SCRIPT
+           ========================================================= */
+        .table-responsive { overflow-x: auto; width: 100%; -webkit-overflow-scrolling: touch; margin-bottom: 1rem; }
+        .btn-menu-mobile { display: none; background: transparent; border: none; color: #fff; font-size: 24px; cursor: pointer; padding: 0 10px; }
+        .overlay-mobile { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 250; }
+        .overlay-mobile.show { display: block; }
+        @media (max-width: 1024px) {
+            .sidebar { transform: translateX(-100%); z-index: 300; transition: transform 0.3s ease; height: 100vh; top: 0; padding-top: 56px; }
+            .sidebar.open { transform: translateX(0); }
+            .main, .layout, .main-content { margin-left: 0 !important; width: 100% !important; padding-left: 0 !important; padding-right: 0 !important; }
+            .topbar-brand { display: none; }
+            .btn-menu-mobile { display: block; }
+            .conteos { grid-template-columns: 1fr 1fr !important; }
+            .filtros { flex-direction: column; align-items: stretch !important; }
+            .filtros > div { width: 100%; }
+            .filtros input, .filtros select { width: 100% !important; }
+            .page { padding: 16px !important; }
+            .topbar-user { display: none; }
+        }
+        @media (max-width: 480px) {
+            .conteos { grid-template-columns: 1fr !important; }
         }
     </style>
 </head>
 <body>
+<!-- Mobile Overlay -->
+<div id="sidebar-overlay-mobile" class="overlay-mobile" onclick="document.querySelector('.sidebar').classList.remove('open'); this.classList.remove('show');"></div>
 
     {{-- ── LADO IZQUIERDO ── --}}
     <div class="left">
@@ -339,6 +372,17 @@
                 ¿Olvidaste tu contraseña?<br>
                 Contacta al administrador de la FICCT<br><br>
                 <span style="color:#d1d5db">Si es tu primer ingreso, usa la contraseña temporal enviada a tu correo</span>
+            </div>
+
+            {{-- Mobile Pre-registro --}}
+            <div class="mobile-pre-registro">
+                <div class="divider-mobile">¿Aún no tienes cuenta?</div>
+                <a href="{{ route('pre-registro.estudiante') }}" class="btn-outline-mobile">
+                    📋 &nbsp;Pre-registro estudiante
+                </a>
+                <a href="{{ route('pre-registro.docente') }}" class="btn-outline-mobile">
+                    🧑‍🏫 &nbsp;Pre-registro docente
+                </a>
             </div>
 
         </div>

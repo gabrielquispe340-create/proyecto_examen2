@@ -388,9 +388,35 @@
             .asist-group { flex-direction: column; }
             .gh-kpis { display: none; }
         }
+    
+                /* =========================================================
+           RESPONSIVE FIXES INJECTED BY AUTOMATION SCRIPT
+           ========================================================= */
+        .table-responsive { overflow-x: auto; width: 100%; -webkit-overflow-scrolling: touch; margin-bottom: 1rem; }
+        .btn-menu-mobile { display: none; background: transparent; border: none; color: #fff; font-size: 24px; cursor: pointer; padding: 0 10px; }
+        .overlay-mobile { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 250; }
+        .overlay-mobile.show { display: block; }
+        @media (max-width: 1024px) {
+            .sidebar { transform: translateX(-100%); z-index: 300; transition: transform 0.3s ease; height: 100vh; top: 0; padding-top: 56px; }
+            .sidebar.open { transform: translateX(0); }
+            .main, .layout, .main-content { margin-left: 0 !important; width: 100% !important; padding-left: 0 !important; padding-right: 0 !important; }
+            .topbar-brand { display: none; }
+            .btn-menu-mobile { display: block; }
+            .conteos { grid-template-columns: 1fr 1fr !important; }
+            .filtros { flex-direction: column; align-items: stretch !important; }
+            .filtros > div { width: 100%; }
+            .filtros input, .filtros select { width: 100% !important; }
+            .page { padding: 16px !important; }
+            .topbar-user { display: none; }
+        }
+        @media (max-width: 480px) {
+            .conteos { grid-template-columns: 1fr !important; }
+        }
     </style>
 </head>
 <body>
+<!-- Mobile Overlay -->
+<div id="sidebar-overlay-mobile" class="overlay-mobile" onclick="document.querySelector('.sidebar').classList.remove('open'); this.classList.remove('show');"></div>
 
 <!-- SIDEBAR -->
 <aside class="sidebar">
@@ -442,6 +468,7 @@
 
 <!-- TOPBAR -->
 <div class="topbar">
+    <button type="button" class="btn-menu-mobile" onclick="document.querySelector('.sidebar').classList.toggle('open'); document.getElementById('sidebar-overlay-mobile').classList.toggle('show');">&#9776;</button>
     <div class="topbar-left">
         <a href="{{ route('docente.dashboard') }}" class="back-btn">
             <i class="ti ti-arrow-left"></i> Volver
@@ -521,7 +548,7 @@
             <input type="text" id="search-roster" placeholder="Buscar alumno..." oninput="filtrarTabla('roster-table', this.value)">
         </div>
         <div class="table-card">
-            <table id="roster-table">
+            <div class="table-responsive"><table id="roster-table">
                 <thead>
                     <tr>
                         <th>#</th>
@@ -587,7 +614,7 @@
                     <tr><td colspan="6" style="text-align:center;padding:40px;color:var(--muted)">No hay postulantes en este grupo.</td></tr>
                     @endforelse
                 </tbody>
-            </table>
+            </table></div>
         </div>
     </div>
 
@@ -608,7 +635,7 @@
             </div>
 
             <div class="table-card">
-                <table>
+                <div class="table-responsive"><table>
                     <thead>
                         <tr>
                             <th>#</th>
@@ -645,7 +672,7 @@
                         <tr><td colspan="4" style="text-align:center;padding:40px;color:var(--muted)">No hay postulantes.</td></tr>
                         @endforelse
                     </tbody>
-                </table>
+                </table></div>
             </div>
         </form>
     </div>
@@ -660,7 +687,7 @@
         </div>
 
         <div class="table-card">
-            <table>
+            <div class="table-responsive"><table>
                 <thead>
                     <tr>
                         <th>#</th>
@@ -728,7 +755,7 @@
                     <tr><td colspan="{{ 3 + $examenes->count() }}" style="text-align:center;padding:40px;color:var(--muted)">No hay postulantes en este grupo.</td></tr>
                     @endforelse
                 </tbody>
-            </table>
+            </table></div>
         </div>
     </div>
 
@@ -786,7 +813,7 @@
                     </div>
                 @else
                     <div class="table-card">
-                        <table>
+                        <div class="table-responsive"><table>
                             <thead>
                                 <tr>
                                     <th>Materia</th>
@@ -821,7 +848,7 @@
                                 </tr>
                                 @endforeach
                             </tbody>
-                        </table>
+                        </table></div>
                     </div>
                 @endif
 
@@ -832,7 +859,7 @@
                         <button class="btn-sm" onclick="document.getElementById('entregas-seccion').style.display='none'" style="color:var(--muted)">Cerrar</button>
                     </div>
                     <div class="table-card" style="margin-top:10px">
-                        <table id="tabla-entregas">
+                        <div class="table-responsive"><table id="tabla-entregas">
                             <thead>
                                 <tr>
                                     <th>Estudiante</th>
@@ -847,7 +874,7 @@
                             <tbody id="cuerpo-entregas">
                                 <!-- Cargado dinámicamente o por backend -->
                             </tbody>
-                        </table>
+                        </table></div>
                     </div>
                 </div>
             </div>

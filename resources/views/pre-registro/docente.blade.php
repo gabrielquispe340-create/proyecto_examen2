@@ -116,9 +116,48 @@
         .no-conv { background: #fef9c3; border: 1px solid #fde68a; border-radius: 10px; padding: 16px 20px; text-align: center; font-size: 13px; color: #92400e; margin-bottom: 24px; }
 
         .info-box { background: #f8fafc; border-radius: 10px; padding: 14px 16px; margin-top: 20px; font-size: 12px; color: #64748b; border: 1px solid #e2e8f0; }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 768px) {
+            .stepper { justify-content: flex-start; padding: 0 16px; -webkit-overflow-scrolling: touch; }
+            .grid-2, .grid-3, .turno-grid, .upload-grid, .materias-grid { grid-template-columns: 1fr !important; }
+            .col-span-2 { grid-column: span 1 !important; }
+            .container { padding: 16px 12px 60px; }
+            .card { padding: 20px 16px; }
+            .hero { padding: 32px 16px 24px; }
+            .nav-btns { flex-direction: column-reverse; gap: 12px; }
+            .nav-btns .btn { width: 100%; justify-content: center; }
+            .header { padding: 0 16px; }
+        }
+    
+                /* =========================================================
+           RESPONSIVE FIXES INJECTED BY AUTOMATION SCRIPT
+           ========================================================= */
+        .table-responsive { overflow-x: auto; width: 100%; -webkit-overflow-scrolling: touch; margin-bottom: 1rem; }
+        .btn-menu-mobile { display: none; background: transparent; border: none; color: #fff; font-size: 24px; cursor: pointer; padding: 0 10px; }
+        .overlay-mobile { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 250; }
+        .overlay-mobile.show { display: block; }
+        @media (max-width: 1024px) {
+            .sidebar { transform: translateX(-100%); z-index: 300; transition: transform 0.3s ease; height: 100vh; top: 0; padding-top: 56px; }
+            .sidebar.open { transform: translateX(0); }
+            .main, .layout, .main-content { margin-left: 0 !important; width: 100% !important; padding-left: 0 !important; padding-right: 0 !important; }
+            .topbar-brand { display: none; }
+            .btn-menu-mobile { display: block; }
+            .conteos { grid-template-columns: 1fr 1fr !important; }
+            .filtros { flex-direction: column; align-items: stretch !important; }
+            .filtros > div { width: 100%; }
+            .filtros input, .filtros select { width: 100% !important; }
+            .page { padding: 16px !important; }
+            .topbar-user { display: none; }
+        }
+        @media (max-width: 480px) {
+            .conteos { grid-template-columns: 1fr !important; }
+        }
     </style>
 </head>
 <body>
+<!-- Mobile Overlay -->
+<div id="sidebar-overlay-mobile" class="overlay-mobile" onclick="document.querySelector('.sidebar').classList.remove('open'); this.classList.remove('show');"></div>
 
 <header class="header">
     <a href="{{ route('login') }}" class="header-brand">
@@ -172,7 +211,7 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('pre-registro.docente.store') }}" enctype="multipart/form-data" id="form-doc">
+    <form method="POST" action="{{ route('pre-registro.docente.store') }}" enctype="multipart/form-data" id="form-doc" novalidate>
         @csrf
 
         {{-- ══ PASO 1: DATOS PERSONALES ══ --}}

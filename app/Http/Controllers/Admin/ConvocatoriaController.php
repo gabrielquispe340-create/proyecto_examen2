@@ -166,12 +166,18 @@ class ConvocatoriaController extends Controller
         $convocatoria = Convocatoria::findOrFail($id);
         $convocatoria->update(['estado' => 'CONCLUIDA']);
 
+        // Eliminar todos los postulantes y pre-registros asociados a esta convocatoria
+        // para limpiar los apartados de postulantes.
+        \App\Models\Postulante::where('convocatoria_id', $id)->delete();
+        \App\Models\PreRegistroEstudiante::where('convocatoria_id', $id)->delete();
+        DB::table('pre_registro_docente')->where('convocatoria_id', $id)->delete();
+
         DB::table('log_actividad')->insert([
             'usuario_id'     => Auth::id(),
             'usuario_nombre' => Auth::user()->nombre . ' ' . Auth::user()->apellido,
             'usuario_email'  => Auth::user()->email,
             'accion'         => 'registro_actualizado',
-            'descripcion'    => "Convocatoria concluida: {$convocatoria->nombre}",
+            'descripcion'    => "Convocatoria concluida: {$convocatoria->nombre} y postulantes limpiados",
             'ip'             => request()->ip(),
             'modulo'         => 'convocatoria',
             'resultado'      => 'ok',
