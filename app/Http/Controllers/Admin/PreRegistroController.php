@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\PreRegistroAprobadoMail;
+use App\Mail\PreRegistroRechazadoMail;
 
 class PreRegistroController extends Controller
 {
@@ -115,6 +118,9 @@ class PreRegistroController extends Controller
             ]);
         }
 
+        DB::beginTransaction();
+        try {
+
         // Crear postulante
         DB::table('postulante')->insert([
             'usuario_id'        => $usuarioId,
@@ -140,14 +146,16 @@ class PreRegistroController extends Controller
         ]);
 
         // Guardar credencial temporal
-        DB::table('credencial_temporal')->insert([
-            'pre_registro_id'  => $pre->id,
-            'email'            => $pre->email,
-            'codigo_registro'  => $codigo,
-            'contrasena_correo'=> $pre->ci,
-            'correo_enviado'   => false,
-            'created_at'       => now(),
-        ]);
+        DB::table('credencial_temporal')->updateOrInsert(
+            ['codigo_registro'  => $codigo],
+            [
+                'pre_registro_id'  => $pre->id,
+                'email'            => $pre->email,
+                'contrasena_correo'=> $pre->ci,
+                'correo_enviado'   => false,
+                'created_at'       => now(),
+            ]
+        );
 
         // Actualizar estado del pre-registro
         DB::table('pre_registro_estudiante')->where('id', $id)->update([
@@ -170,7 +178,20 @@ class PreRegistroController extends Controller
             'fecha_hora'     => now(),
         ]);
 
-        return back()->with('success', "✅ Aprobado. Código: {$codigo} — Contraseña: {$pre->ci}");
+        DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Ocurrió un error al procesar el registro: ' . $e->getMessage());
+        }
+
+        try {
+            Mail::to($pre->email)->send(new PreRegistroAprobadoMail($codigo, $pre->ci));
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Error enviando correo de aprobación: ' . $e->getMessage());
+            return back()->with('success', "✅ Aprobado. Código: {$codigo} — Contraseña: {$pre->ci}. Pero hubo un problema al enviar el correo electrónico.");
+        }
+
+        return back()->with('success', "✅ Aprobado y correo enviado. Código: {$codigo} — Contraseña: {$pre->ci}");
     }
 
     // Rechazar estudiante
@@ -202,7 +223,17 @@ class PreRegistroController extends Controller
             'fecha_hora'     => now(),
         ]);
 
-        return back()->with('success', '❌ Pre-registro rechazado correctamente.');
+        $pre = DB::table('pre_registro_estudiante')->where('id', $id)->first();
+        if ($pre && $pre->email) {
+            try {
+                Mail::to($pre->email)->send(new PreRegistroRechazadoMail($request->observacion));
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Error enviando correo de rechazo estudiante: ' . $e->getMessage());
+                return back()->with('success', '❌ Pre-registro rechazado correctamente. Pero hubo un error al enviar el correo.');
+            }
+        }
+
+        return back()->with('success', '❌ Pre-registro rechazado correctamente y correo enviado.');
     }
 
     // Rechazar docente
@@ -234,6 +265,16 @@ class PreRegistroController extends Controller
             'fecha_hora'     => now(),
         ]);
 
-        return back()->with('success', '❌ Pre-registro docente rechazado.');
+        $pre = DB::table('pre_registro_docente')->where('id', $id)->first();
+        if ($pre && $pre->email) {
+            try {
+                Mail::to($pre->email)->send(new PreRegistroRechazadoMail($request->observacion));
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Error enviando correo de rechazo docente: ' . $e->getMessage());
+                return back()->with('success', '❌ Pre-registro docente rechazado. Pero hubo un error al enviar el correo.');
+            }
+        }
+
+        return back()->with('success', '❌ Pre-registro docente rechazado y correo enviado.');
     }
 }

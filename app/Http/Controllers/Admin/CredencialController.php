@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\CredencialMail;
 
 class CredencialController extends Controller
 {
@@ -120,26 +122,32 @@ class CredencialController extends Controller
             return back()->with('error', 'Registro de credencial no encontrado.');
         }
 
-        DB::table('credencial_temporal')
-            ->where('id', $id)
-            ->update([
-                'correo_enviado' => true,
-                'enviado_en'     => now() // Opcional, o solo marcar correo_enviado si es lo que tiene el schema
+        try {
+            Mail::to($credencial->email)->send(new CredencialMail($credencial->codigo_registro, $credencial->contrasena_correo));
+
+            DB::table('credencial_temporal')
+                ->where('id', $id)
+                ->update([
+                    'correo_enviado' => true,
+                    'enviado_en'     => now()
+                ]);
+
+            DB::table('log_actividad')->insert([
+                'usuario_id'     => Auth::id(),
+                'usuario_nombre' => Auth::user()->nombre . ' ' . Auth::user()->apellido,
+                'usuario_email'  => Auth::user()->email,
+                'accion'         => 'credencial_enviada',
+                'descripcion'    => "Envío de credenciales temporales a {$credencial->email}.",
+                'ip'             => $request->ip(),
+                'modulo'         => 'credenciales',
+                'resultado'      => 'ok',
+                'fecha_hora'     => now()
             ]);
 
-        DB::table('log_actividad')->insert([
-            'usuario_id'     => Auth::id(),
-            'usuario_nombre' => Auth::user()->nombre . ' ' . Auth::user()->apellido,
-            'usuario_email'  => Auth::user()->email,
-            'accion'         => 'credencial_enviada',
-            'descripcion'    => "Envío simulado de credenciales temporales a {$credencial->email}.",
-            'ip'             => $request->ip(),
-            'modulo'         => 'credenciales',
-            'resultado'      => 'ok',
-            'fecha_hora'     => now()
-        ]);
-
-        return back()->with('success', "✅ Credenciales enviadas simuladamente a {$credencial->email} con éxito.");
+            return back()->with('success', "✅ Credenciales enviadas a {$credencial->email} con éxito.");
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error al enviar correo: ' . $e->getMessage());
+        }
     }
 
     public function enviarMasivo(Request $request)
@@ -155,14 +163,26 @@ class CredencialController extends Controller
         DB::beginTransaction();
         try {
             $totalEnviadas = 0;
+            $errores = 0;
             foreach ($pendientes as $p) {
-                DB::table('credencial_temporal')
-                    ->where('id', $p->id)
-                    ->update([
-                        'correo_enviado' => true,
-                        'enviado_en'     => now()
-                    ]);
-                $totalEnviadas++;
+                try {
+                    Mail::to($p->email)->send(new CredencialMail($p->codigo_registro, $p->contrasena_correo));
+
+                    DB::table('credencial_temporal')
+                        ->where('id', $p->id)
+                        ->update([
+                            'correo_enviado' => true,
+                            'enviado_en'     => now()
+                        ]);
+                    $totalEnviadas++;
+                } catch (\Exception $e) {
+                    $errores++;
+                }
+            }
+
+            $mensajeResultado = "Envío masivo de credenciales completado: {$totalEnviadas} correos enviados.";
+            if ($errores > 0) {
+                $mensajeResultado .= " Errores: {$errores}.";
             }
 
             DB::table('log_actividad')->insert([
@@ -170,7 +190,7 @@ class CredencialController extends Controller
                 'usuario_nombre' => Auth::user()->nombre . ' ' . Auth::user()->apellido,
                 'usuario_email'  => Auth::user()->email,
                 'accion'         => 'credencial_enviada',
-                'descripcion'    => "Envío masivo simulado de credenciales completado: {$totalEnviadas} correos marcados como enviados.",
+                'descripcion'    => $mensajeResultado,
                 'ip'             => $request->ip(),
                 'modulo'         => 'credenciales',
                 'resultado'      => 'ok',
@@ -178,7 +198,11 @@ class CredencialController extends Controller
             ]);
 
             DB::commit();
-            return back()->with('success', "✅ Envío masivo simulado completado con éxito. Se enviaron {$totalEnviadas} credenciales.");
+
+            if ($errores > 0) {
+                return back()->with('success', "✅ Envío masivo completado. Enviados: {$totalEnviadas}. Errores: {$errores}. Verifica tu configuración de correo.");
+            }
+            return back()->with('success', "✅ Envío masivo completado con éxito. Se enviaron {$totalEnviadas} credenciales.");
 
         } catch (\Exception $e) {
             DB::rollBack();
